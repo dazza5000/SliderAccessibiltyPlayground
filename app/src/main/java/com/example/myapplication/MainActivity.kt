@@ -16,14 +16,23 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Label
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SliderDefaults.colors
@@ -40,12 +49,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.invisibleToUser
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
@@ -59,6 +70,7 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,8 +92,13 @@ class MainActivity : ComponentActivity() {
                         labels.add(i.toString())
                     }
 
-                    Column {
-                        Text("foo")
+//                    SliderWithCustomThumbSample()
+
+
+                    Column(
+                        verticalArrangement = Arrangement.Center
+                    ) {
+//                        Text(text = sliderPosition.toString())
                         WellSlider(
                             modifier = Modifier.padding(horizontal = 20.dp),
                             value = sliderPosition,
@@ -92,7 +109,7 @@ class MainActivity : ComponentActivity() {
                             valueRange = 0f..sliderSize,
                             stepSize = 1f
                         )
-                        Text("bar")
+//                        Text("bar")
                     }
                 }
             }
@@ -215,10 +232,84 @@ fun WellSlider(
             selectedLabel = labelFormatter.getOrNull(value.toInt()).orEmpty()
         },
         enabled = enabled,
-        thumb = thumb,
+        onValueChangeFinished = {
+            // launch some business logic update with the state you hold
+            // viewModel.updateSelectedSliderValue(sliderPosition)
+        },
+        thumb = {
+            Label(
+                label = {
+                    PlainTooltip(
+//                        modifier = Modifier
+//                            .defaultMinSize(
+//                                minWidth = 45.dp,
+//                                minHeight = 25.dp
+//                            )
+//                            .wrapContentWidth(),
+//                        containerColor = MaterialTheme.colorScheme.primary,
+//                        shape = RoundedCornerShape(6.dp),
+                    ) {
+                        Text(
+                            selectedLabel,
+                            modifier = Modifier.padding(8.dp),
+                        )
+                    }
+                },
+                interactionSource = interactionSource
+            ) {
+                SliderDefaults.Thumb(
+                    interactionSource = interactionSource,
+                    colors = SliderDefaults.colors(),
+                    enabled = enabled,
+                )
+            }
+        },
         interactionSource = interactionSource,
         steps = if (stepSize == 0f) 0 else steps,
     )
+}
+
+
+@Composable
+fun SliderWithCustomThumbSample() {
+    var sliderPosition by remember { mutableStateOf(0f) }
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    Column {
+        Slider(
+//            modifier = Modifier.semantics { contentDescription = "Localized Description" },
+            value = sliderPosition,
+            onValueChange = { sliderPosition = it },
+            valueRange = 0f..100f,
+            interactionSource = interactionSource,
+            onValueChangeFinished = {
+                // launch some business logic update with the state you hold
+                // viewModel.updateSelectedSliderValue(sliderPosition)
+            },
+            thumb = {
+                Label(
+                    label = {
+                        PlainTooltip(
+                            modifier = Modifier
+                                .requiredSize(45.dp, 25.dp)
+                                .wrapContentWidth()
+                        ) {
+                            val roundedEnd =
+                                (sliderPosition * 100.0).roundToInt() / 100.0
+                            Text(roundedEnd.toString())
+                        }
+                    },
+                    interactionSource = interactionSource
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Favorite,
+                        contentDescription = null,
+                        modifier = Modifier.size(ButtonDefaults.IconSize),
+                        tint = Color.Red
+                    )
+                }
+            }
+        )
+    }
 }
 
 
