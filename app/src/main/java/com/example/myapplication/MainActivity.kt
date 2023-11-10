@@ -5,38 +5,21 @@ package com.example.myapplication
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Label
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.SliderDefaults.colors
-import androidx.compose.material3.SliderPositions
+import androidx.compose.material3.SliderState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,28 +32,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.invisibleToUser
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntRect
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupPositionProvider
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.delay
-import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -171,16 +143,16 @@ fun WellSlider(
     }
 
     val tooltipAnchorPadding = with(LocalDensity.current) { 4.dp.roundToPx() }
-    val positionProvider = remember { PopUpPositionProvider(tooltipAnchorPadding) }
-    var selectedLabel by remember { mutableStateOf(labelFormatter.getOrNull(value.toInt()).orEmpty()) }
+    var selectedLabel by remember {
+        mutableStateOf(
+            labelFormatter.getOrNull(value.toInt()).orEmpty()
+        )
+    }
 
-    val thumb: @Composable (SliderPositions) -> Unit = {
-        Popup(popupPositionProvider = positionProvider) {
-            AnimatedVisibility(
-                visible = currentInteraction !is DragInteraction.Stop,
-                enter = fadeIn() + expandVertically(),
-                exit = shrinkVertically() + fadeOut(),
-            ) {
+    val thumb: @Composable (SliderState) -> Unit = {
+        Label(
+            label = {
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
@@ -206,13 +178,16 @@ fun WellSlider(
                     }
                     Spacer(modifier = Modifier.padding(vertical = 4.dp))
                 }
-            }
-        }
-        SliderDefaults.Thumb(
+
+            },
             interactionSource = interactionSource,
-            colors = SliderDefaults.colors(),
-            enabled = enabled,
-        )
+        ) {
+            SliderDefaults.Thumb(
+                interactionSource = interactionSource,
+                colors = SliderDefaults.colors(),
+                enabled = enabled,
+            )
+        }
     }
 
     val steps =
@@ -221,6 +196,8 @@ fun WellSlider(
         } else {
             ((valueRange.endInclusive - valueRange.start) / stepSize + 1).toInt()
         }
+
+
 
     Slider(
         value = value,
@@ -236,103 +213,10 @@ fun WellSlider(
             // launch some business logic update with the state you hold
             // viewModel.updateSelectedSliderValue(sliderPosition)
         },
-        thumb = {
-            Label(
-                label = {
-                    PlainTooltip(
-//                        modifier = Modifier
-//                            .defaultMinSize(
-//                                minWidth = 45.dp,
-//                                minHeight = 25.dp
-//                            )
-//                            .wrapContentWidth(),
-//                        containerColor = MaterialTheme.colorScheme.primary,
-//                        shape = RoundedCornerShape(6.dp),
-                    ) {
-                        Text(
-                            selectedLabel,
-                            modifier = Modifier.padding(8.dp),
-                        )
-                    }
-                },
-                interactionSource = interactionSource
-            ) {
-                SliderDefaults.Thumb(
-                    interactionSource = interactionSource,
-                    colors = SliderDefaults.colors(),
-                    enabled = enabled,
-                )
-            }
-        },
+        thumb = thumb,
         interactionSource = interactionSource,
         steps = if (stepSize == 0f) 0 else steps,
     )
-}
-
-
-@Composable
-fun SliderWithCustomThumbSample() {
-    var sliderPosition by remember { mutableStateOf(0f) }
-    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
-    Column {
-        Slider(
-//            modifier = Modifier.semantics { contentDescription = "Localized Description" },
-            value = sliderPosition,
-            onValueChange = { sliderPosition = it },
-            valueRange = 0f..100f,
-            interactionSource = interactionSource,
-            onValueChangeFinished = {
-                // launch some business logic update with the state you hold
-                // viewModel.updateSelectedSliderValue(sliderPosition)
-            },
-            thumb = {
-                Label(
-                    label = {
-                        PlainTooltip(
-                            modifier = Modifier
-                                .requiredSize(45.dp, 25.dp)
-                                .wrapContentWidth()
-                        ) {
-                            val roundedEnd =
-                                (sliderPosition * 100.0).roundToInt() / 100.0
-                            Text(roundedEnd.toString())
-                        }
-                    },
-                    interactionSource = interactionSource
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Favorite,
-                        contentDescription = null,
-                        modifier = Modifier.size(ButtonDefaults.IconSize),
-                        tint = Color.Red
-                    )
-                }
-            }
-        )
-    }
-}
-
-
-class PopUpPositionProvider(
-    val popUpAnchorPadding: Int,
-) : PopupPositionProvider {
-    override fun calculatePosition(
-        anchorBounds: IntRect,
-        windowSize: IntSize,
-        layoutDirection: LayoutDirection,
-        popupContentSize: IntSize,
-    ): IntOffset {
-        val x = anchorBounds.left + (anchorBounds.width - popupContentSize.width) / 2
-
-        // Tooltip prefers to be above the anchor,
-        // but if this causes the tooltip to overlap with the anchor
-        // then we place it below the anchor
-        var y = anchorBounds.top - popupContentSize.height - popUpAnchorPadding
-        if (y < 0) {
-            y = anchorBounds.bottom + popUpAnchorPadding
-        }
-        return IntOffset(x, y)
-    }
 }
 
 class TriangleShape : Shape {
