@@ -5,7 +5,6 @@ package com.example.myapplication
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,7 +22,6 @@ import androidx.compose.material3.SliderState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,14 +33,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.ui.theme.MyApplicationTheme
-import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,17 +56,14 @@ class MainActivity : ComponentActivity() {
                     val sliderSize = 10f
 
                     val labels: MutableList<String> = mutableListOf()
-                    for (i in 1..sliderSize.toInt()) {
+                    for (i in 0..sliderSize.toInt()) {
                         labels.add(i.toString())
                     }
-
-//                    SliderWithCustomThumbSample()
 
 
                     Column(
                         verticalArrangement = Arrangement.Center
                     ) {
-//                        Text(text = sliderPosition.toString())
                         WellSlider(
                             modifier = Modifier.padding(horizontal = 20.dp),
                             value = sliderPosition,
@@ -81,7 +74,6 @@ class MainActivity : ComponentActivity() {
                             valueRange = 0f..sliderSize,
                             stepSize = 1f
                         )
-//                        Text("bar")
                     }
                 }
             }
@@ -118,31 +110,8 @@ fun WellSlider(
     stepSize: Float = 0f,
     labelFormatter: List<String>,
 ) {
-    var currentInteraction: DragInteraction by remember {
-        mutableStateOf(
-            DragInteraction.Stop(
-                DragInteraction.Start(),
-            ),
-        )
-    }
     val interactionSource = remember { MutableInteractionSource() }
 
-    LaunchedEffect(interactionSource) {
-        interactionSource.interactions.collect { interaction ->
-            when (interaction) {
-                is DragInteraction.Start -> {
-                    currentInteraction = interaction
-                }
-
-                is DragInteraction.Stop -> {
-                    delay(500)
-                    currentInteraction = interaction
-                }
-            }
-        }
-    }
-
-    val tooltipAnchorPadding = with(LocalDensity.current) { 4.dp.roundToPx() }
     var selectedLabel by remember {
         mutableStateOf(
             labelFormatter.getOrNull(value.toInt()).orEmpty()
