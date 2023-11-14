@@ -11,11 +11,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Label
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SliderState
@@ -30,15 +37,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,82 +121,7 @@ fun WellSlider(
     stepSize: Float = 0f,
     labelFormatter: List<String>,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-
-    var selectedLabel by remember {
-        mutableStateOf(
-            labelFormatter.getOrNull(value.toInt()).orEmpty()
-        )
-    }
-
-    val thumb: @Composable (SliderState) -> Unit = {
-        Label(
-            label = {
-
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                    ) {
-                        Column {
-                            Text(
-                                selectedLabel,
-                                modifier = Modifier.padding(8.dp),
-                            )
-                        }
-                    }
-
-                    Surface(
-                        modifier = Modifier
-                            .rotate(180f)
-                            .size(8.dp),
-                        shape = TriangleShape(),
-                        color = MaterialTheme.colorScheme.primary,
-                    ) {
-                    }
-                    Spacer(modifier = Modifier.padding(vertical = 4.dp))
-                }
-
-            },
-            interactionSource = interactionSource,
-        ) {
-            SliderDefaults.Thumb(
-                interactionSource = interactionSource,
-                colors = SliderDefaults.colors(),
-                enabled = enabled,
-            )
-        }
-    }
-
-    val steps =
-        if (stepSize == 0f) {
-            0
-        } else {
-            ((valueRange.endInclusive - valueRange.start) / stepSize + 1).toInt()
-        }
-
-
-
-    Slider(
-        value = value,
-        valueRange = valueRange,
-        modifier = modifier
-            .testTag(WELL_SLIDER_TEST_TAG),
-        onValueChange = {
-            onValueChange(it)
-            selectedLabel = labelFormatter.getOrNull(value.toInt()).orEmpty()
-        },
-        enabled = enabled,
-        onValueChangeFinished = {
-            // launch some business logic update with the state you hold
-            // viewModel.updateSelectedSliderValue(sliderPosition)
-        },
-        thumb = thumb,
-        interactionSource = interactionSource,
-        steps = if (stepSize == 0f) 0 else steps,
-    )
+    SliderWithCustomThumbSample()
 }
 
 class TriangleShape : Shape {
@@ -200,4 +136,46 @@ class TriangleShape : Shape {
             lineTo(x = 0f, y = size.height)
         },
     )
+}
+
+@Composable
+fun SliderWithCustomThumbSample() {
+    var sliderPosition by remember { mutableStateOf(0f) }
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    Column {
+        Slider(
+            modifier = Modifier.semantics { contentDescription = "Localized Description" },
+            value = sliderPosition,
+            onValueChange = { sliderPosition = it },
+            valueRange = 0f..100f,
+            interactionSource = interactionSource,
+            onValueChangeFinished = {
+                // launch some business logic update with the state you hold
+                // viewModel.updateSelectedSliderValue(sliderPosition)
+            },
+            thumb = {
+                Label(
+                    label = {
+                        PlainTooltip(
+                            modifier = Modifier
+                                .requiredSize(45.dp, 25.dp)
+                                .wrapContentWidth()
+                        ) {
+                            val roundedEnd =
+                                (sliderPosition * 100.0).roundToInt() / 100.0
+                            Text(roundedEnd.toString())
+                        }
+                    },
+                    interactionSource = interactionSource
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Favorite,
+                        contentDescription = null,
+                        modifier = Modifier.size(ButtonDefaults.IconSize),
+                        tint = Color.Red
+                    )
+                }
+            }
+        )
+    }
 }
