@@ -7,7 +7,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -28,7 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
@@ -40,51 +44,32 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val sliderSize = 10f
 
-        val labels: MutableList<String> = mutableListOf()
-        for (i in 0..sliderSize.toInt()) {
-            labels.add(i.toString())
-        }
+
 
         setContent {
 
 
-            var sliderPosition by remember { mutableStateOf(0f) }
-
-
-            MaterialTheme(
-                colorScheme = MaterialTheme.colorScheme
-                    .copy(primary = Color.Cyan)
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center
             ) {
-
-
-                SliderWithCustomThumbSample {
-                    sliderPosition = it
-                }
+                SliderWithCustomThumbSample()
             }
 
-            Text(
-                text = sliderPosition.toString(),
-            )
         }
     }
 }
 
 @Composable
-fun SliderWithCustomThumbSample(
-    onValueChange: (Float) -> Unit,
-) {
+fun SliderWithCustomThumbSample() {
     var sliderPosition by remember { mutableStateOf(0f) }
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
     Column {
         Slider(
             modifier = Modifier.semantics { contentDescription = "Localized Description" },
             value = sliderPosition,
-            onValueChange = {
-                onValueChange.invoke(it)
-                sliderPosition = it
-            },
+            onValueChange = { sliderPosition = it },
             valueRange = 0f..100f,
             interactionSource = interactionSource,
             onValueChangeFinished = {
